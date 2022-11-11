@@ -1,0 +1,16 @@
+# Shortcut for reloading tmux config
+unbind r
+bind r source-file ~/.tmux.conf
+
+# Enable true color mode
+set -g default-terminal "screen-256color"
+
+# Enable mouse in tmux. Allows resizing panes and
+# selecting text within a pane.
+set -g mouse on
+
+# Enable vim bindings for copy mode
+set-window-option -g mode-keys vi
+
+# Don't exit copy mode after dragging with mouse
+unbind -T copy-mode-vi MouseDragEnd1Pane 
