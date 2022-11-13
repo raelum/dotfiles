@@ -24,6 +24,7 @@ After that, we symlink the files in this repo to the HOME directory. The command
 ln -s ~/code/dotfiles/zshrc.symlink ~/.zshrc
 ln -s ~/code/dotfiles/p10k.zsh.symlink ~/.p10k.zsh
 ln -s ~/code/dotfiles/tmux.conf.symlink ~/.tmux.conf
+ln -s ~/code/dotfiles/config/nvim.symlink ~/.config/nvim
 ```
 
 Inspiration from https://github.com/holman/dotfiles
