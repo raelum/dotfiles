@@ -1,16 +1,54 @@
-# Shortcut for reloading tmux config
-unbind r
-bind r source-file ~/.tmux.conf
-
-# Enable true color mode
-set -g default-terminal "screen-256color"
-
-# Enable mouse in tmux. Allows resizing panes and
-# selecting text within a pane.
+# Enable mouse in tmux. Allows the following:
+# - scrolling within a pane
+# - selecting text within a pane
+# - resizing panes
 set -g mouse on
+
+# Rebind prefix to ctrl+a
+# I've swapped ctrl and caps lock on my keyboard :)
+unbind C-b
+set -g prefix C-a
+
+# Shortcut for reloading tmux config
+#unbind r
+#bind r source-file ~/.tmux.conf
+
+# Sensible shorcuts for creating panes
+#bind h split-window -v
+#bind v split-window -h
 
 # Enable vim bindings for copy mode
 set-window-option -g mode-keys vi
 
 # Don't exit copy mode after dragging with mouse
 unbind -T copy-mode-vi MouseDragEnd1Pane 
+
+# Use tpm to install tmux plugins
+# See https://github.com/tmux-plugins/tpm
+set -g @plugin 'tmux-plugins/tpm'
+
+# Sensible tmux defaults.
+# See https://github.com/tmux-plugins/tmux-sensible
+set -g @plugin 'tmux-plugins/tmux-sensible'
+
+# Shortcuts for pane navigation + resizing
+# See https://github.com/tmux-plugins/tmux-pain-control
+set -g @plugin 'tmux-plugins/tmux-pain-control'
+
+# Restore tmux after system restart
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+
+set -g @resurrect-strategy-nvim 'session' # restore nvim
+set -g @resurrect-capture-pane-contents 'on' # restore pane contents
+set -g @continuum-restore 'on' # enable auto restore
+set -g @continuum-save-interval '5' # save session every 5 minutes 
+# Change terminal: https://github.com/tmux-plugins/tmux-continuum/blob/master/docs/automatic_start.md
+set -g @continuum-boot-options 'iterm' # boot tmux in iterm
+
+# Theme :)
+set -g @plugin 'egel/tmux-gruvbox'
+set -g @tmux-gruvbox 'dark' # or 'light'
+
+# Initialize tpm (needs to be at end of tmux.conf)
+run '~/.tmux/plugins/tpm/tpm'
