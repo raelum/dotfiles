@@ -3,6 +3,12 @@
 ## Installation
 First, we need to install the following:
 
+JetBrains Nerd Font
+```
+brew tap homebrew/cask-fonts
+brew install font-jetbrains-mono-nerd-font
+```
+
 Oh My Zsh
 ```
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -32,3 +38,12 @@ Inspiration from https://github.com/holman/dotfiles
 
 To find out what packages I installed in brew (not dependencies):
 brew leaves
+
+TODO
+- git status
+- easy readme preview
+- bootstrap tpm and it's packages when running tmux for the first time
+- https://github.com/folke/which-key.nvim
+
+FAR FUTURE
+- lazy loading
