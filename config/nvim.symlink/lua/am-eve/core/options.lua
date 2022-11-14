@@ -20,7 +20,7 @@ opt.smartcase = true
 
 -- Highlight line cursor is on
 opt.cursorline = true
--- opt.signcolumn = 'yes'
+opt.signcolumn = 'yes'
 
 -- Appearance settings
 opt.termguicolors = true

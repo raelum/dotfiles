@@ -40,7 +40,8 @@ To find out what packages I installed in brew (not dependencies):
 brew leaves
 
 TODO
-- git status
+- file explorer
+- tabs
 - easy readme preview
 - bootstrap tpm and it's packages when running tmux for the first time
 - https://github.com/folke/which-key.nvim
