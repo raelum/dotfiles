@@ -40,6 +40,13 @@ return packer.startup(function(use)
 
   -- Show git diff markers
   use 'lewis6991/gitsigns.nvim'
+
+  -- Telescope
+  use {
+    'nvim-telescope/telescope.nvim', tag = '0.1.0',
+    requires = { 'nvim-lua/plenary.nvim' }
+  }
+
   -- Automatically set up your configuration after cloning packer.nvim
   -- Put this at the end after all plugins
   if packer_bootstrap then

@@ -26,6 +26,9 @@ opt.signcolumn = 'yes'
 opt.termguicolors = true
 opt.background = 'dark' -- make themes prefer dark mode
 
+-- Make status line global when there are splits in nvim
+vim.o.ls = 3
+
 -- Allow backspacing more (auto-indents, line breaks)
 opt.backspace='indent,eol,start'
 
