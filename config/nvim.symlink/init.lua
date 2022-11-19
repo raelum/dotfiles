@@ -3,10 +3,10 @@ require('raelum.core.keymaps')
 require('raelum.core.options')
 
 -- Install plugins (needs to be above plugin configs)
-require('raelum.plugins-setup')
+require('raelum.plugins.install')
 
 -- Plugin configuration
-require('raelum.plugins.gruvbox')
-require('raelum.plugins.lualine')
-require('raelum.plugins.gitsigns')
-require('raelum.plugins.telescope')
+require('raelum.plugins.configs.gruvbox')
+require('raelum.plugins.configs.lualine')
+require('raelum.plugins.configs.gitsigns')
+require('raelum.plugins.configs.telescope')
