@@ -9,5 +9,8 @@ vim.g.mapleader = ' '
 -- Don't copy to register when deleting a character
 --keymap.set('n', 'x', '"_x')
 
+-- Clear highlighting when pressing escape in normal mode
+keymap.set('n', '<Esc>', ':noh<CR>', { silent = true })
+
 -- Easier save (only writes when there are changes)
 keymap.set('n', '<Leader>s', ':update<CR>')
