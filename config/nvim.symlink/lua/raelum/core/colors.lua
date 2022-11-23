@@ -1,12 +1,13 @@
--- Color adjustment for generic features that don't belong to any plugin.
--- Color adjustments for specific plugins will belong to that plugin's config
--- file.
---
--- Pallete file:
--- https://github.com/ellisonleao/gruvbox.nvim/blob/main/lua/gruvbox/palette.lua
--- 
--- Colors visualization:
--- https://github.com/gruvbox-community/gruvbox
+--[[
+Color adjustment for generic features that don't belong to any plugin.
+Color adjustments for specific plugins will belong to that plugin's config file.
+
+Pallete file:
+https://github.com/ellisonleao/gruvbox.nvim/blob/main/lua/gruvbox/palette.lua
+
+Colors visualization:
+https://github.com/gruvbox-community/gruvbox
+--]]
 local present, colors = pcall(require, 'gruvbox.palette')
 if not present then
   return

@@ -21,8 +21,7 @@ opt.colorcolumn = table.concat(range, ',')
 -- Don't wrap lines that go off screen
 opt.wrap = false
 
--- Search case insentively unless explicitly typing
--- a capital letter
+-- Search case insentively unless explicitly typing a capital letter
 opt.ignorecase = true
 opt.smartcase = true
 
@@ -48,4 +47,9 @@ opt.splitright = true
 opt.splitbelow = true
 
 -- Treat words with - in them as 1 word for vim motions
+
+
+
+
+
 opt.iskeyword:append('-')
