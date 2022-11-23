@@ -10,6 +10,14 @@ opt.shiftwidth = 2
 opt.expandtab = true
 opt.autoindent = true
 
+-- Highlight all columns past max code length
+codelength = 80
+range = {}
+for i=codelength, 999 do
+  range[i-codelength] = i
+end
+opt.colorcolumn = table.concat(range, ',')
+
 -- Don't wrap lines that go off screen
 opt.wrap = false
 
