@@ -1,0 +1,7 @@
+# Powerlevel10k theme
+# https://github.com/romkatv/powerlevel10k
+romkatv/powerlevel10k
+
+# Better vim mode
+# https://github.com/jeffreytse/zsh-vi-mode
+jeffreytse/zsh-vi-mode

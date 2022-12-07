@@ -1,32 +1,37 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# https://github.com/romkatv/powerlevel10k/blob/master/README.md#instant-prompt
-p10k_script="${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-if [[ -r $p10k_script ]]; then
-  source $p10k_script
+# Install antidote plugin manager
+antidote_dir=~/.antidote
+if [[ ! -d $antidote_dir ]]; then
+  echo 'Installing Antidote plugin manager.'
+  git clone --depth=1 https://github.com/mattmc3/antidote.git $antidote_dir
+fi
+source $antidote_dir/antidote.zsh
+unset antidote_dir
+
+# Update antidote static plugins file if it is older than text plugins file
+plugins_file=~/.zsh_plugins.txt
+static_file=~/.zsh_plugins.zsh
+if [[ ! -f $static_file ]] || [[ $plugins_file -nt $static_file ]]; then
+  echo 'Syncing Antidote plugins list.'
+  antidote bundle <$plugins_file >$static_file
 fi
 
-# Make python, python-config, pip, etc all point to Python 3.10
+# Source antidote plugins
+source $static_file
+unset plugins_file static_file
+
+# Source Powerlevel10k theme configuration
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# https://github.com/romkatv/powerlevel10k/blob/master/README.md#instant-prompt
+#p10k_script="${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+#if [[ -r $p10k_script ]]; then
+#  source $p10k_script
+#fi
+
+# Make Python 3.10 the system default
 python_bin=/opt/homebrew/opt/python@3.10/libexec/bin
 if [[ -d $python_bin ]]; then
   PATH=#=$python_bin:$PATH
 fi
-
-# Set path to oh my zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
-
-# Use powerlevel10k as zsh theme.
-# Run `p10k configure` to customize theme. (modifies ~/.p10k.zsh)
-ZSH_THEME="powerlevel10k/powerlevel10k"
-
-# Which oh-my-zsh plugins to use.
-# See here for a full list of built in plugins:
-# https://github.com/ohmyzsh/ohmyzsh/wiki/Plugins
-plugins=(
-	# Git aliases. See here for a full list:
-	# https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git
-	git
-)
-
-# Source oh my zsh and powerlevel10k.
-source $ZSH/oh-my-zsh.sh
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+unset python_bin
