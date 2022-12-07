@@ -45,6 +45,9 @@ TODO
 - easy readme preview
 - bootstrap tpm and it's packages when running tmux for the first time
 - https://github.com/folke/which-key.nvim
+- create a git submodule for nvim configuration
+- see if there is a way to auto reload nvim after updating config?
+- install a zsh plugin manager
 
 FAR FUTURE
 - lazy loading

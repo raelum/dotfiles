@@ -1,7 +1,14 @@
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# See https://github.com/romkatv/powerlevel10k/blob/master/README.md#instant-prompt
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+# https://github.com/romkatv/powerlevel10k/blob/master/README.md#instant-prompt
+p10k_script="${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+if [[ -r $p10k_script ]]; then
+  source $p10k_script
+fi
+
+# Make python, python-config, pip, etc all point to Python 3.10
+python_bin=/opt/homebrew/opt/python@3.10/libexec/bin
+if [[ -d $python_bin ]]; then
+  PATH=#=$python_bin:$PATH
 fi
 
 # Set path to oh my zsh installation.

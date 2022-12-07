@@ -47,9 +47,8 @@ opt.splitright = true
 opt.splitbelow = true
 
 -- Treat words with - in them as 1 word for vim motions
-
-
-
-
-
 opt.iskeyword:append('-')
+
+-- Save backup copies (this also limits nvim to 1 write instead of 2 which is
+-- useful when using entr to watch file changes and run command)
+opt.backupcopy = 'yes'
