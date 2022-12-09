@@ -2,6 +2,6 @@
 # https://github.com/romkatv/powerlevel10k
 romkatv/powerlevel10k
 
-# Better vim mode
-# https://github.com/jeffreytse/zsh-vi-mode
-jeffreytse/zsh-vi-mode
+# Better vim mode forked with my custom changes
+# https://github.com/raelum/zsh-vi-mode
+raelum/zsh-vi-mode

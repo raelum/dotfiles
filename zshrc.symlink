@@ -8,6 +8,7 @@ source $antidote_dir/antidote.zsh
 unset antidote_dir
 
 # Update antidote static plugins file if it is older than text plugins file
+# -nt checks if the first file is newer than the second file
 plugins_file=~/.zsh_plugins.txt
 static_file=~/.zsh_plugins.zsh
 if [[ ! -f $static_file ]] || [[ $plugins_file -nt $static_file ]]; then
@@ -22,12 +23,12 @@ unset plugins_file static_file
 # Source Powerlevel10k theme configuration
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# https://github.com/romkatv/powerlevel10k/blob/master/README.md#instant-prompt
-#p10k_script="${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-#if [[ -r $p10k_script ]]; then
-#  source $p10k_script
-#fi
+# Allow 'jk' to escape insert mode similar to nvim config
+# NOTE: This has a side effect of j being typed very slowly so we change the
+#       default key timeout speed from 0.4 to 0.2. (this effects all command key
+#       strokes such as dd)
+ZVM_VI_INSERT_ESCAPE_BINDKEY=jk
+ZVM_KEYTIMEOUT=0.2
 
 # Make Python 3.10 the system default
 python_bin=/opt/homebrew/opt/python@3.10/libexec/bin
