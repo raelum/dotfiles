@@ -1,10 +1,5 @@
 local opt = vim.opt
 
--- Shorten timeout length when typing action keystrokes
--- Only doing this to shorten delay when typing j. After using better-escape
--- there will probably not be a need for this anymore.
-opt.timeoutlen = 200
-
 -- Enable relative number for quick jumping between lines
 opt.relativenumber = true
 opt.number = true

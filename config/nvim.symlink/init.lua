@@ -10,6 +10,7 @@ require('raelum.plugins.configs.gruvbox')
 require('raelum.plugins.configs.lualine')
 require('raelum.plugins.configs.gitsigns')
 require('raelum.plugins.configs.telescope')
+require('raelum.plugins.configs.better_escape')
 
 -- Make generic color adjusts after loading all plugins (including themes)
 require('raelum.core.colors')
