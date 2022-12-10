@@ -21,5 +21,14 @@ keymap.set('n', '#', '#zz')
 -- Center view when scrolling through code
 keymap.set('n', 'j', 'jzz')
 keymap.set('n', 'k', 'kzz')
+keymap.set('n', 'G', 'Gzz')
 keymap.set('n', '<C-d>', '<C-d>zz')
 keymap.set('n', '<C-u>', '<C-u>zz')
+
+-- Better paste with auto-formatting
+keymap.set('n', 'p', 'p`[v`]=')
+keymap.set('n', 'P', 'P`[v`]=')
+
+-- More natural redo command since most other commands capitalize to go in
+-- opposite direction. Default 'U' command is useless anyways.
+keymap.set('n', 'U', '<C-r>')
