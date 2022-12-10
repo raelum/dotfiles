@@ -4,9 +4,9 @@ local opt = vim.opt
 opt.relativenumber = true
 opt.number = true
 
--- Make tabs enter 2 spaces
-opt.tabstop = 2
-opt.shiftwidth = 2
+-- Make tabs enter 4 spaces
+opt.tabstop = 4
+opt.shiftwidth = 4
 opt.expandtab = true
 opt.autoindent = true
 
