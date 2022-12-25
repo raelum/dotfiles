@@ -19,9 +19,6 @@ keymap.set('n', '*', '*zz')
 keymap.set('n', '#', '#zz')
 
 -- Center view when scrolling through code
-keymap.set('n', 'j', 'jzz')
-keymap.set('n', 'k', 'kzz')
-keymap.set('n', 'G', 'Gzz')
 keymap.set('n', '<C-d>', '<C-d>zz')
 keymap.set('n', '<C-u>', '<C-u>zz')
 

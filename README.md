@@ -34,21 +34,24 @@ ln -s ~/code/dotfiles/tmux.conf.symlink ~/.tmux.conf
 ln -s ~/code/dotfiles/config/nvim.symlink ~/.config/nvim
 ```
 
-Inspiration from https://github.com/holman/dotfiles
-
+Inspiration from:
+- https://github.com/holman/dotfiles
+- https://github.com/nvim-lua/kickstart.nvim
 
 To find out what packages I installed in brew (not dependencies):
 brew leaves
 
-TODO
+NVIM TODO
 - file explorer
 - tabs
 - easy readme preview
-- bootstrap tpm and it's packages when running tmux for the first time
 - https://github.com/folke/which-key.nvim
 - create a git submodule for nvim configuration
 - see if there is a way to auto reload nvim after updating config?
+
+SHELL TODO
 - install a zsh plugin manager
+- bootstrap tpm and it's packages when running tmux for the first time
 
 FAR FUTURE
 - lazy loading

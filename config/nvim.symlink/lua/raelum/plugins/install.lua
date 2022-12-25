@@ -49,7 +49,13 @@ return packer.startup(function(use)
   }
 
   -- Better 'jk' escape without blocking on 'j'
-  use "max397574/better-escape.nvim"
+  use 'max397574/better-escape.nvim'
+
+  -- Easier commenting
+  use 'numToStr/Comment.nvim'
+
+  -- Autocomplete braces pair
+  use 'windwp/nvim-autopairs'
 
   -- Automatically set up your configuration after cloning packer.nvim.
   -- Put this at the end after all plugins.
