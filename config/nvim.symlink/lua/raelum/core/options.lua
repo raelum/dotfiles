@@ -18,6 +18,9 @@ for i=codelength, 999 do
 end
 opt.colorcolumn = table.concat(range, ',')
 
+-- Turn off scrolling
+opt.scrolloff = 9999
+
 -- Don't wrap lines that go off screen
 opt.wrap = false
 
@@ -52,3 +55,6 @@ opt.iskeyword:append('-')
 -- Save backup copies (this also limits nvim to 1 write instead of 2 which is
 -- useful when using entr to watch file changes and run command)
 opt.backupcopy = 'yes'
+
+-- Remove '~' sign after the end of buffer
+opt.fillchars:append { eob = " " }
