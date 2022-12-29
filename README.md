@@ -37,6 +37,7 @@ ln -s ~/code/dotfiles/config/nvim.symlink ~/.config/nvim
 Inspiration from:
 - https://github.com/holman/dotfiles
 - https://github.com/nvim-lua/kickstart.nvim
+- https://stackoverflow.com/questions/26708822/why-do-vim-experts-prefer-buffers-over-tabs/26710166#26710166
 
 To find out what packages I installed in brew (not dependencies):
 brew leaves
@@ -48,6 +49,8 @@ NVIM TODO
 - https://github.com/folke/which-key.nvim
 - create a git submodule for nvim configuration
 - see if there is a way to auto reload nvim after updating config?
+    - Create session: https://vi.stackexchange.com/questions/22897/how-to-get-the-previous-session-every-time-i-start-vim
+    - Run script after exiting nvim to restart nvim: https://stackoverflow.com/questions/20386219/automatically-run-script-when-exiting-vim
 
 SHELL TODO
 - install a zsh plugin manager

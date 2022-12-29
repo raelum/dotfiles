@@ -28,6 +28,19 @@ opt.wrap = false
 opt.ignorecase = true
 opt.smartcase = true
 
+-- Turn off highlighting when searching
+vim.o.hlsearch = false
+
+-- Briefly highlight yanked text to provide visual feedback
+local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
+vim.api.nvim_create_autocmd('TextYankPost', {
+    callback = function()
+        vim.highlight.on_yank()
+    end,
+    group = highlight_group,
+    pattern = '*',
+})
+
 -- Highlight line cursor is on
 opt.cursorline = true
 opt.signcolumn = 'yes'
@@ -55,6 +68,9 @@ opt.iskeyword:append('-')
 -- Save backup copies (this also limits nvim to 1 write instead of 2 which is
 -- useful when using entr to watch file changes and run command)
 opt.backupcopy = 'yes'
+
+-- Save undo history so it can persist across sessions
+vim.o.undofile = true
 
 -- Remove '~' sign after the end of buffer
 opt.fillchars:append { eob = " " }
