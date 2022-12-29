@@ -10,7 +10,7 @@ https://github.com/gruvbox-community/gruvbox
 --]]
 local present, colors = pcall(require, 'gruvbox.palette')
 if not present then
-  return
+    return
 end
 
 -- Customize color of max code length highlight to differentiate it from

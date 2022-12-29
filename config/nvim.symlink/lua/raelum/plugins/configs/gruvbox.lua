@@ -1,10 +1,10 @@
 local status, gruvbox = pcall(require, "gruvbox")
 if not status then
-  return
+    return
 end
 
 gruvbox.setup({
-  contrast = "hard",
-  bold = true
+    contrast = "hard",
+    bold = true
 })
 vim.cmd[[colorscheme gruvbox]]
