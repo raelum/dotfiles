@@ -13,6 +13,7 @@ require('raelum.plugins.configs.telescope')
 require('raelum.plugins.configs.better_escape')
 require('raelum.plugins.configs.comment')
 require('raelum.plugins.configs.autopairs')
+require('raelum.plugins.configs.indent_blankline')
 
 -- Make generic color adjusts after loading all plugins (including themes)
 require('raelum.core.colors')

@@ -14,7 +14,7 @@ opt.autoindent = true
 codelength = 80
 range = {}
 for i=codelength, 999 do
-  range[i-codelength] = i
+    range[i-codelength] = i
 end
 opt.colorcolumn = table.concat(range, ',')
 
@@ -40,6 +40,11 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     group = highlight_group,
     pattern = '*',
 })
+
+-- Display hidden characters
+vim.opt.list = true
+vim.opt.listchars:append "lead:⋅" -- leading spaces
+vim.opt.listchars:append "trail:⋅" -- trailing spaces
 
 -- Highlight line cursor is on
 opt.cursorline = true
