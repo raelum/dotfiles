@@ -1,7 +1,3 @@
-# Powerlevel10k theme
-# https://github.com/romkatv/powerlevel10k
-romkatv/powerlevel10k
-
 # Better vim mode forked with my custom changes
 # https://github.com/raelum/zsh-vi-mode
 raelum/zsh-vi-mode

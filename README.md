@@ -9,11 +9,6 @@ brew tap homebrew/cask-fonts
 brew install font-jetbrains-mono-nerd-font
 ```
 
-Oh My Zsh
-```
-sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-```
-
 PowerLevel10k
 ```
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
@@ -29,9 +24,11 @@ After that, we symlink the files in this repo to the HOME directory. The command
 ```
 ln -s ~/code/dotfiles/zshrc.symlink ~/.zshrc
 ln -s ~/code/dotfiles/zsh_plugins.txt.symlink ~/.zsh_plugins.txt
-ln -s ~/code/dotfiles/p10k.zsh.symlink ~/.p10k.zsh
 ln -s ~/code/dotfiles/tmux.conf.symlink ~/.tmux.conf
 ln -s ~/code/dotfiles/config/nvim.symlink ~/.config/nvim
+
+ln -s ~/code/dotfiles/alacritty.yml ~/.alacritty.yml
+ln -s ~/code/dotfiles/config/fish.symlink ~/.config/fish
 ```
 
 Inspiration from:

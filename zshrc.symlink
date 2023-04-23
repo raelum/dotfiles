@@ -20,9 +20,6 @@ fi
 source $static_file
 unset plugins_file static_file
 
-# Source Powerlevel10k theme configuration
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
 # Allow 'jk' to escape insert mode similar to nvim config
 # NOTE: This has a side effect of j being typed very slowly so we change the
 #       default key timeout speed from 0.4 to 0.2. (this effects all command key
@@ -36,3 +33,6 @@ if [[ -d $python_bin ]]; then
   PATH=#=$python_bin:$PATH
 fi
 unset python_bin
+
+# Source secret api keys
+source ~/.apikeys
