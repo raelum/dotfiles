@@ -9,26 +9,22 @@ brew tap homebrew/cask-fonts
 brew install font-jetbrains-mono-nerd-font
 ```
 
-PowerLevel10k
-```
-git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k
-```
-
 Install tmux package manager
 ```
 git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ```
-After syncing tmux.conf, source it with `tmux source-file ~/.tmux.conf`. Then press shift + I to install all plugins in config.
+After syncing tmux.conf, source it with `tmux source-file ~/.tmux.conf`. Then press Leader + Shift + I to install all plugins in config.
 
 After that, we symlink the files in this repo to the HOME directory. The commands assume the repo is in ~/code/dotfiles.
 ```
 ln -s ~/code/dotfiles/zshrc.symlink ~/.zshrc
 ln -s ~/code/dotfiles/zsh_plugins.txt.symlink ~/.zsh_plugins.txt
-ln -s ~/code/dotfiles/tmux.conf.symlink ~/.tmux.conf
-ln -s ~/code/dotfiles/config/nvim.symlink ~/.config/nvim
 
-ln -s ~/code/dotfiles/alacritty.yml ~/.alacritty.yml
+ln -s ~/code/dotfiles/config/nvim.symlink ~/.config/nvim
+ln -s ~/code/dotfiles/config/tmux.symlink ~/.config/tmux
+ln -s ~/code/dotfiles/config/alacritty.symlink ~/.config/alacritty
 ln -s ~/code/dotfiles/config/fish.symlink ~/.config/fish
+ln -s ~/code/dotfiles/hushlogin.symlink ~/.hushlogin
 ```
 
 Inspiration from:

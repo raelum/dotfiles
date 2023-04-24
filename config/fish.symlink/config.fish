@@ -1,3 +1,6 @@
+# Remove fish welcome message
+set fish_greeting
+
 # Load homebrew commands
 fish_add_path /opt/homebrew/bin
 
@@ -14,6 +17,7 @@ alias cd z
 alias ls lsd
 alias cat bat
 alias vim nvim
+alias v nvim
 
 # Set up vim mode cursors
 set fish_cursor_default block
