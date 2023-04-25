@@ -3,6 +3,7 @@ set fish_greeting
 
 # Load homebrew commands
 fish_add_path /opt/homebrew/bin
+fish_add_path ~/.config/bin
 
 # Set default editor.
 # Use Alt+E to open current command in editor.
@@ -17,7 +18,9 @@ alias cd z
 alias ls lsd
 alias cat bat
 alias vim nvim
-alias v nvim
+
+# Convenience aliases
+alias n nvim
 
 # Set up vim mode cursors
 set fish_cursor_default block

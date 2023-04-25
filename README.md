@@ -20,10 +20,11 @@ After that, we symlink the files in this repo to the HOME directory. The command
 ln -s ~/code/dotfiles/zshrc.symlink ~/.zshrc
 ln -s ~/code/dotfiles/zsh_plugins.txt.symlink ~/.zsh_plugins.txt
 
-ln -s ~/code/dotfiles/config/nvim.symlink ~/.config/nvim
-ln -s ~/code/dotfiles/config/tmux.symlink ~/.config/tmux
 ln -s ~/code/dotfiles/config/alacritty.symlink ~/.config/alacritty
 ln -s ~/code/dotfiles/config/fish.symlink ~/.config/fish
+ln -s ~/code/dotfiles/config/tmux.symlink ~/.config/tmux
+ln -s ~/code/dotfiles/config/nvim.symlink ~/.config/nvim
+ln -s ~/code/dotfiles/config/bin.symlink ~/.config/bin
 ln -s ~/code/dotfiles/hushlogin.symlink ~/.hushlogin
 ```
 
