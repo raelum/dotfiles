@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Get session name
 if [ "$#" -eq 1 ]; then
     session_name="$1"
 else
@@ -8,13 +9,27 @@ else
     session_name=$(
         (tmux list-sessions -F '#{session_name}' ;
         find ~/code -type d -maxdepth 1 -exec basename {} \; ) \
-        | sort | uniq | fzf)
+        | sort | uniq | fzf --reverse)
 fi
 
+# Exit early if no session name was chosen
 if [ -z "$session_name" ]; then
     exit 0
 fi
 
+# Already in a tmux session
+if [ -n "$TMUX" ]; then
+    if tmux has-session -t "$session_name" 2>/dev/null; then
+        tmux switch-client -t "$session_name"
+    else
+        # Create the session in detached mode and switch to it
+        tmux new-session -d -s "$session_name"
+        tmux switch-client -t "$session_name"
+    fi
+    exit 0
+fi
+
+# Not already in tmux session
 if tmux has-session -t "$session_name" 2>/dev/null; then
     tmux attach-session -t "$session_name"
 else
