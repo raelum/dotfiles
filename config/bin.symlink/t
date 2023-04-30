@@ -1,37 +1,68 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
-# Get session name
-if [ "$#" -eq 1 ]; then
-    session_name="$1"
-else
-    # Use fzf to interactively search through existing tmux sessions and all
-    # project folders under ~/code.
-    session_name=$(
-        (tmux list-sessions -F '#{session_name}' ;
-        find ~/code -type d -maxdepth 1 -exec basename {} \; ) \
-        | sort | uniq | fzf --reverse)
-fi
+import subprocess
+import os
+import sys
 
-# Exit early if no session name was chosen
-if [ -z "$session_name" ]; then
-    exit 0
-fi
+def shell(command: str):
+    process = subprocess.Popen(command, shell=True, text=True,
+                               stdout=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    return stdout.strip()
 
-# Already in a tmux session
-if [ -n "$TMUX" ]; then
-    if tmux has-session -t "$session_name" 2>/dev/null; then
-        tmux switch-client -t "$session_name"
-    else
-        # Create the session in detached mode and switch to it
-        tmux new-session -d -s "$session_name"
-        tmux switch-client -t "$session_name"
-    fi
-    exit 0
-fi
+def main():
+    # Get session name from arguments (if any)
+    session_name = None
+    if len(sys.argv) > 1:
+        session_name = sys.argv[1]
 
-# Not already in tmux session
-if tmux has-session -t "$session_name" 2>/dev/null; then
-    tmux attach-session -t "$session_name"
-else
-    tmux new-session -s "$session_name"
-fi
+    # Get possible session names
+    tmux_sessions = shell(
+            'tmux list-sessions -F "#{session_name}" | sort').split('\n')
+    project_dirs = shell(
+            'find ~/code -type d -maxdepth 1 -mindepth 1 | sort').split('\n')
+    project_names_to_dir = {os.path.basename(p): p for p in project_dirs}
+
+    # Filter out any existing tmux sessions from project lists
+    filtered_projects = sorted(list(
+            set(project_names_to_dir.keys()) - set(tmux_sessions)))
+
+    # If no session name was provided, use fzf to select session name.
+    # Highlight existing session names in green.
+    if session_name == None:
+        session_name = shell(
+            R'''(echo "\\033[32m{}\\033[0m"; echo "{}") \
+                | fzf --ansi --reverse --print-query | tail -n 1'''
+              .format('\n'.join(tmux_sessions), '\\n'.join(filtered_projects)))
+
+    # Exit early if no session name was selected
+    if session_name == None or session_name == '':
+        return
+
+    # Strip '*' that user added to explicitly use a new session name
+    session_name = session_name.rstrip('*')
+
+    # Interpret '.' to mean current directory
+    if session_name == '.':
+        session_name = shell('basename $(pwd)')
+
+    # Select session directory
+    session_dir = shell('pwd')
+    if session_name in project_names_to_dir:
+        session_dir = project_names_to_dir[session_name]
+
+    in_tmux = shell('echo $TMUX') != ''
+    session_exists = session_name in tmux_sessions
+
+    # Create session if it doesn't exist
+    if not session_exists:
+        shell(f'tmux new-session -d -s "{session_name}" -c "{session_dir}"')
+
+    # Switch to tmux session
+    if in_tmux:
+        shell(f'tmux switch-client -t "{session_name}"')
+    else:
+        shell(f'tmux attach-session -t "{session_name}"')
+
+if __name__ == "__main__":
+    main()
