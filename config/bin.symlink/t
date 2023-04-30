@@ -6,9 +6,17 @@ import sys
 
 def shell(command: str):
     process = subprocess.Popen(command, shell=True, text=True,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    return stdout.strip()
+
+def shell_interactive(command: str):
+    process = subprocess.Popen(command, shell=True, text=True,
                                stdout=subprocess.PIPE)
     stdout, stderr = process.communicate()
     return stdout.strip()
+
 
 def main():
     # Get session name from arguments (if any)
@@ -30,7 +38,7 @@ def main():
     # If no session name was provided, use fzf to select session name.
     # Highlight existing session names in green.
     if session_name == None:
-        session_name = shell(
+        session_name = shell_interactive(
             R'''(echo "\\033[32m{}\\033[0m"; echo "{}") \
                 | fzf --ansi --reverse --print-query | tail -n 1'''
               .format('\n'.join(tmux_sessions), '\\n'.join(filtered_projects)))
