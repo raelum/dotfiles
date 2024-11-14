@@ -5,7 +5,6 @@ First, we need to install the following:
 
 JetBrains Nerd Font
 ```
-brew tap homebrew/cask-fonts
 brew install font-jetbrains-mono-nerd-font
 ```
 
@@ -15,17 +14,17 @@ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ```
 After syncing tmux.conf, source it with `tmux source-file ~/.tmux.conf`. Then press Leader + Shift + I to install all plugins in config.
 
-After that, we symlink the files in this repo to the HOME directory. The commands assume the repo is in ~/code/dotfiles.
+After that, we symlink the files in this repo to the HOME directory. The commands assume the repo is in ~/Documents/projects/code/dotfiles.
 ```
-ln -s ~/code/dotfiles/zshrc.symlink ~/.zshrc
-ln -s ~/code/dotfiles/zsh_plugins.txt.symlink ~/.zsh_plugins.txt
+ln -sf ~/Documents/projects/code/dotfiles/zshrc.symlink ~/.zshrc
+ln -sf ~/Documents/projects/code/dotfiles/zsh_plugins.txt.symlink ~/.zsh_plugins.txt
 
-ln -s ~/code/dotfiles/config/alacritty.symlink ~/.config/alacritty
-ln -s ~/code/dotfiles/config/fish.symlink ~/.config/fish
-ln -s ~/code/dotfiles/config/tmux.symlink ~/.config/tmux
-ln -s ~/code/dotfiles/config/nvim.symlink ~/.config/nvim
-ln -s ~/code/dotfiles/config/bin.symlink ~/.config/bin
-ln -s ~/code/dotfiles/hushlogin.symlink ~/.hushlogin
+ln -sf ~/Documents/projects/code/dotfiles/config/alacritty.symlink ~/.config/alacritty
+ln -sf ~/Documents/projects/code/dotfiles/config/fish.symlink ~/.config/fish
+ln -sf ~/Documents/projects/code/dotfiles/config/tmux.symlink ~/.config/tmux
+ln -sf ~/Documents/projects/code/dotfiles/config/nvim.symlink ~/.config/nvim
+ln -sf ~/Documents/projects/code/dotfiles/config/bin.symlink ~/.config/bin
+ln -sf ~/Documents/projects/code/dotfiles/hushlogin.symlink ~/.hushlogin
 ```
 
 Inspiration from:

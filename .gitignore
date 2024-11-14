@@ -1,3 +1,6 @@
+# Mac metadata files
+.DS_Store
+
 # Neovim plugin files
 config/nvim.symlink/plugin
 
