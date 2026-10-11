@@ -219,7 +219,7 @@ local function open_jj_files_menu()
       border = "rounded",
       title = " JJ Modified Files ",
       title_pos = "center",
-      footer = " [a] Stage  [u] Unstage  [x] Discard  [d] Desc ",
+      footer = " [a] Stage  [u] Unstage  [x] Discard  [d] Desc  [p] Push ",
       footer_pos = "center",
     }
 
@@ -289,13 +289,22 @@ local function open_jj_files_menu()
     end
   end
 
+  -- Prompt user for single-key (y/n) confirmation on the command line
+  local function confirm_yn(prompt)
+    vim.cmd("redraw")
+    vim.api.nvim_echo({ { prompt .. " (y/n) ", "Question" } }, false, {})
+    local char = vim.fn.getcharstr()
+    vim.cmd("redraw")
+    return char == "y" or char == "Y"
+  end
+
   -- Discard uncommitted changes to file via `jj restore` after confirmation
   local function discard_entry()
     local cur_row = vim.api.nvim_win_get_cursor(win)[1]
     local entry = line_to_entry[cur_row]
     if not entry or entry.section ~= "working" then return end
 
-    if vim.fn.confirm("Discard changes to '" .. entry.path .. "'?", "&Yes\n&No", 2) == 1 then
+    if confirm_yn("Discard changes to '" .. entry.path .. "'?") then
       if run_jj({ "restore", entry.path }) then
         vim.notify("✓ Discarded " .. entry.path)
         vim.cmd.checktime()
@@ -318,6 +327,30 @@ local function open_jj_files_menu()
     end)
   end
 
+  -- Push parent commit (@-) to remote Git repository
+  local function push_parent()
+    if not is_parent_mutable() then
+      return vim.notify("Parent commit (@-) is already immutable (already pushed or root)", vim.log.levels.WARN)
+    end
+
+    local is_empty = run_jj({ "log", "-r", "@- & empty()", "-T", "change_id", "--no-graph" })
+    if is_empty and is_empty[1] and vim.trim(is_empty[1]) ~= "" then
+      return vim.notify("Parent commit (@-) has no file changes to push", vim.log.levels.WARN)
+    end
+
+    if not confirm_yn("Push parent commit (@-) to remote?") then
+      return
+    end
+
+    vim.notify("Pushing to remote...", vim.log.levels.INFO)
+    local res = run_jj({ "git", "push" })
+    if res then
+      vim.notify("✓ Successfully pushed to remote!", vim.log.levels.INFO)
+      M.refresh_all_diffs()
+      render()
+    end
+  end
+
   render()
   if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
 
@@ -327,6 +360,7 @@ local function open_jj_files_menu()
   vim.keymap.set("n", "u",     unstage_entry,    { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "x",     discard_entry,    { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "d",     describe_parent,  { buffer = buf, nowait = true, silent = true })
+  vim.keymap.set("n", "p",     push_parent,      { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "q",     close_win,        { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "<Esc>", close_win,        { buffer = buf, nowait = true, silent = true })
 end
