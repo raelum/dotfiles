@@ -4,34 +4,60 @@
 
 local M = {}
 
+-- Diff mode: false = working copy only (@-), true = include staged commit (@--)
+M.include_staged = false
+
+-- =============================================================================
+-- Shared Helpers
+-- =============================================================================
+
+-- Execute a jj command and return stdout lines, or nil on failure
+local function run_jj(args, notify_err)
+  local cmd = { "jj", "--no-pager", "--color=never" }
+  vim.list_extend(cmd, args)
+  local res = vim.system(cmd, { text = true }):wait()
+  if res.code ~= 0 then
+    if notify_err and res.stderr and vim.trim(res.stderr) ~= "" then
+      vim.notify("JJ error: " .. vim.trim(res.stderr), vim.log.levels.ERROR)
+    end
+    return nil
+  end
+  return vim.split(res.stdout or "", "\n", { trimempty = true })
+end
+
+-- Check if a mutable staged commit (@-) exists
+function M.has_staged_commit()
+  local res = run_jj({ "log", "-r", "@- & mutable()", "-T", "change_id", "--no-graph" })
+  return res and res[1] and vim.trim(res[1]) ~= ""
+end
+
+-- Prompt user for single-key (y/n) confirmation on the command line
+local function confirm_yn(prompt)
+  vim.cmd("redraw")
+  vim.api.nvim_echo({ { prompt .. " (y/n) ", "Question" } }, false, {})
+  local char = vim.fn.getcharstr()
+  vim.cmd("redraw")
+  return char == "y" or char == "Y"
+end
+
 -- =============================================================================
 -- Jujutsu Diff Reference Adapter (for mini.diff)
 -- =============================================================================
-
--- Diff comparison target: "@-" (working commit) or "@--" (parent commit)
-M.current_base = "@-"
-_G.current_jj_base = M.current_base
 
 -- Retrieve baseline file content from `jj file show -r <base>` for mini.diff
 function M.get_ref_text(buf_id)
   local path = vim.api.nvim_buf_get_name(buf_id)
   if path == "" or vim.bo[buf_id].buftype ~= "" then return nil end
-  local buf_dir = vim.fs.dirname(path)
-  local root_res = vim.system({ "jj", "--no-pager", "--color=never", "root" }, { cwd = buf_dir, text = true }):wait()
-  if root_res.code ~= 0 or not root_res.stdout or root_res.stdout == "" then return nil end
-  local repo_root = vim.fs.normalize(vim.trim(root_res.stdout))
+  local repo_root = vim.fs.root(path, ".jj")
+  if not repo_root then return nil end
   local norm_path = vim.fs.normalize(path)
   if not vim.startswith(norm_path, repo_root .. "/") then return nil end
   local rel_path = norm_path:sub(#repo_root + 2)
 
-  local res = vim.system({ "jj", "--no-pager", "--color=never", "file", "show", "-r", M.current_base, rel_path }, { cwd = repo_root, text = true }):wait()
-  if res.code == 0 then
-    return res.stdout or ""
-  else
-    return ""
-  end
+  local base = (M.include_staged and M.has_staged_commit()) and "@--" or "@-"
+  local res = vim.system({ "jj", "--no-pager", "--color=never", "file", "show", "-r", base, rel_path }, { text = true }):wait()
+  return res.code == 0 and (res.stdout or "") or ""
 end
-_G.get_jj_ref_text = M.get_ref_text
 
 -- Refresh gutter diff signs across all active buffers
 function M.refresh_all_diffs()
@@ -48,33 +74,24 @@ function M.refresh_all_diffs()
 end
 _G.refresh_all_jj_diffs = M.refresh_all_diffs
 
--- Toggle diff base between @- (working commit) and @-- (includes parent commit)
+-- Toggle diff mode between working copy only and including staged commit
 function M.toggle_diff_base()
-  local res = vim.system({ "jj", "--no-pager", "--color=never", "log", "-r", "@- & mutable()", "-T", "change_id", "--no-graph" }, { text = true }):wait()
-  local parent_mutable = (res.code == 0 and res.stdout and vim.trim(res.stdout) ~= "")
+  M.include_staged = not M.include_staged
 
-  local msg = ""
-  local hl = "Directory"
-
-  if not parent_mutable then
-    M.current_base = "@-"
-    msg = "Diff: working commit only (parent is immutable)"
-    hl = "WarningMsg"
-  else
-    if M.current_base == "@-" then
-      M.current_base = "@--"
-      msg = "Diff: includes parent commit"
+  local msg
+  if M.include_staged then
+    if M.has_staged_commit() then
+      msg = "Diff mode: includes staged changes"
     else
-      M.current_base = "@-"
-      msg = "Diff: working commit only"
+      msg = "Diff mode: includes staged changes (none currently staged)"
     end
+  else
+    msg = "Diff mode: working copy only"
   end
-  _G.current_jj_base = M.current_base
 
   M.refresh_all_diffs()
-
   vim.cmd("redraw")
-  vim.api.nvim_echo({ { msg, hl } }, false, {})
+  vim.api.nvim_echo({ { msg, "Directory" } }, false, {})
 end
 
 -- Custom provider passed into mini.diff setup
@@ -95,37 +112,16 @@ M.source = {
 -- Jujutsu Modified Files Menu (Browse, Stage & Unstage, Fig-style)
 -- =============================================================================
 
--- Interactive dashboard to review working files and stage them into parent (@-)
+-- Interactive dashboard to review working copy and stage into commit (@-)
 local function open_jj_files_menu()
   local win, buf = nil, nil
 
-  -- Execute jj command with clean formatting and notify on stderr errors
-  local function run_jj(args)
-    local cmd = { "jj", "--no-pager", "--color=never" }
-    vim.list_extend(cmd, args)
-    local res = vim.system(cmd, { text = true }):wait()
-    if res.code ~= 0 then
-      if res.stderr and vim.trim(res.stderr) ~= "" then
-        vim.notify("JJ error: " .. vim.trim(res.stderr), vim.log.levels.ERROR)
-      end
-      return nil
-    end
-    return vim.split(res.stdout or "", "\n", { trimempty = true })
-  end
+  -- Ensure current buffer is within a Jujutsu repository
+  local repo_root = vim.fs.root(0, ".jj") or vim.fs.root(vim.fn.getcwd(), ".jj")
+  if not repo_root then return vim.notify("Not inside a Jujutsu repository", vim.log.levels.WARN) end
 
-  -- Ensure current buffer directory is within a Jujutsu repository
-  local root_res = run_jj({ "root" })
-  if not root_res or not root_res[1] then return vim.notify("Not inside a Jujutsu repository", vim.log.levels.WARN) end
-  local repo_root = vim.fs.normalize(root_res[1])
-
-  -- Check if parent commit (@-) can be modified (i.e. not root or immutable)
-  local function is_parent_mutable()
-    local res = run_jj({ "log", "-r", "@- & mutable()", "-T", "change_id", "--no-graph" })
-    return res and res[1] and vim.trim(res[1]) ~= ""
-  end
-
-  -- Get first-line description of parent commit (@-)
-  local function get_parent_desc()
+  -- Get first-line description of staged commit (@-)
+  local function get_staged_desc()
     local res = run_jj({ "log", "-r", "@-", "-T", "description.first_line()", "--no-graph" })
     return (res and res[1] and vim.trim(res[1]) ~= "") and vim.trim(res[1]) or nil
   end
@@ -152,11 +148,10 @@ local function open_jj_files_menu()
   -- Build buffer lines, apply syntax highlights, and position floating window
   local function render(target_row)
     local working_entries = parse_entries(run_jj({ "diff", "-r", "@-..@", "--summary" }), "working")
-    local parent_entries  = parse_entries(run_jj({ "diff", "-r", "@--..@-", "--summary" }), "parent")
-
-    if #working_entries == 0 and #parent_entries == 0 then
-      if win and vim.api.nvim_win_is_valid(win) then vim.api.nvim_win_close(win, true) end
-      return vim.notify("No modified files in repository (@ or @-)", vim.log.levels.INFO)
+    local staged_entries = {}
+    local has_staged = M.has_staged_commit()
+    if has_staged then
+      staged_entries = parse_entries(run_jj({ "diff", "-r", "@--..@-", "--summary" }), "staged")
     end
 
     local buf_lines = {}
@@ -187,9 +182,13 @@ local function open_jj_files_menu()
     add_section("Working Copy (@) - Uncommitted:", working_entries, "(no uncommitted changes)")
     table.insert(buf_lines, "")
 
-    local p_desc = get_parent_desc()
-    local p_header = "Parent Commit (@-)" .. (not is_parent_mutable() and " [root/immutable]:" or (p_desc and (' ["' .. p_desc .. '"]:') or ":"))
-    add_section(p_header, parent_entries, "(no files in parent commit)")
+    if has_staged then
+      local desc = get_staged_desc()
+      local header = "Staged Commit (@-)" .. (desc and (' ["' .. desc .. '"]:') or ":")
+      add_section(header, staged_entries, "(no files in staged commit)")
+    else
+      add_section("Staged Commit: none", {}, "(stage uncommitted files with [a] to create)")
+    end
 
     if not buf or not vim.api.nvim_buf_is_valid(buf) then
       buf = vim.api.nvim_create_buf(false, true)
@@ -229,7 +228,7 @@ local function open_jj_files_menu()
       vim.api.nvim_win_set_config(win, win_opts)
     end
 
-    local cursor_row = math.max(1, math.min(target_row or first_file_line or 1, #buf_lines))
+    local cursor_row = math.max(1, math.min(target_row or first_file_line or 2, #buf_lines))
     pcall(vim.api.nvim_win_set_cursor, win, { cursor_row, 5 })
   end
 
@@ -249,23 +248,23 @@ local function open_jj_files_menu()
     vim.cmd.edit(entry.full_path)
   end
 
-  -- Squash working copy file into parent commit (@-), prompting if initial commit
+  -- Squash working copy file into staged commit (@-), prompting if initial commit
   local function stage_entry()
     local cur_row = vim.api.nvim_win_get_cursor(win)[1]
     local entry = line_to_entry[cur_row]
-    if not entry or entry.section == "parent" then return end
+    if not entry or entry.section == "staged" then return end
 
-    if is_parent_mutable() then
-      if run_jj({ "squash", entry.path }) then
-        vim.notify("✓ Staged '" .. entry.path .. "' into @-")
+    if M.has_staged_commit() then
+      if run_jj({ "squash", entry.path }, true) then
+        vim.notify("✓ Staged '" .. entry.path .. "'")
         M.refresh_all_diffs()
         render(cur_row)
       end
     else
-      vim.ui.input({ prompt = "Initial commit message for @-: " }, function(input)
+      vim.ui.input({ prompt = "Initial commit message for staged commit: " }, function(input)
         if not input or vim.trim(input) == "" then return end
-        if run_jj({ "commit", "-m", vim.trim(input), entry.path }) then
-          vim.notify("✓ Created commit \"" .. vim.trim(input) .. "\" with " .. entry.path)
+        if run_jj({ "commit", "-m", vim.trim(input), entry.path }, true) then
+          vim.notify("✓ Created staged commit \"" .. vim.trim(input) .. "\"")
           M.refresh_all_diffs()
           render(cur_row)
         end
@@ -273,29 +272,20 @@ local function open_jj_files_menu()
     end
   end
 
-  -- Move file from parent commit (@-) back into working copy (@)
+  -- Move file from staged commit (@-) back into working copy (@)
   local function unstage_entry()
     local cur_row = vim.api.nvim_win_get_cursor(win)[1]
     local entry = line_to_entry[cur_row]
-    if not entry or entry.section == "working" then return end
-    if not is_parent_mutable() then
-      return vim.notify("Cannot unstage: Parent Commit (@-) is immutable", vim.log.levels.WARN)
+    if not entry or entry.section ~= "staged" then return end
+    if not M.has_staged_commit() then
+      return vim.notify("No staged commit to unstage from", vim.log.levels.WARN)
     end
 
-    if run_jj({ "squash", "--from", "@-", "--into", "@", "--keep-emptied", entry.path }) then
+    if run_jj({ "squash", "--from", "@-", "--into", "@", "--keep-emptied", entry.path }, true) then
       vim.notify("✓ Unstaged '" .. entry.path .. "' back to Working Copy (@)")
       M.refresh_all_diffs()
       render(cur_row)
     end
-  end
-
-  -- Prompt user for single-key (y/n) confirmation on the command line
-  local function confirm_yn(prompt)
-    vim.cmd("redraw")
-    vim.api.nvim_echo({ { prompt .. " (y/n) ", "Question" } }, false, {})
-    local char = vim.fn.getcharstr()
-    vim.cmd("redraw")
-    return char == "y" or char == "Y"
   end
 
   -- Discard uncommitted changes to file via `jj restore` after confirmation
@@ -305,7 +295,7 @@ local function open_jj_files_menu()
     if not entry or entry.section ~= "working" then return end
 
     if confirm_yn("Discard changes to '" .. entry.path .. "'?") then
-      if run_jj({ "restore", entry.path }) then
+      if run_jj({ "restore", entry.path }, true) then
         vim.notify("✓ Discarded " .. entry.path)
         vim.cmd.checktime()
         M.refresh_all_diffs()
@@ -314,38 +304,44 @@ local function open_jj_files_menu()
     end
   end
 
-  -- Edit commit description for parent commit (@-)
-  local function describe_parent()
-    if not is_parent_mutable() then
-      return vim.notify("Cannot edit description: Parent Commit (@-) is immutable", vim.log.levels.WARN)
+  -- Edit commit description for staged commit (@-)
+  local function describe_staged()
+    if not M.has_staged_commit() then
+      return vim.notify("No staged commit to describe", vim.log.levels.WARN)
     end
-    vim.ui.input({ prompt = "Edit commit description for @-: ", default = get_parent_desc() or "" }, function(input)
-      if input and vim.trim(input) ~= "" and run_jj({ "describe", "-r", "@-", "-m", vim.trim(input) }) then
-        vim.notify("✓ Updated commit description: " .. vim.trim(input))
+    vim.ui.input({ prompt = "Edit description for staged commit: ", default = get_staged_desc() or "" }, function(input)
+      if input and vim.trim(input) ~= "" and run_jj({ "describe", "-r", "@-", "-m", vim.trim(input) }, true) then
+        vim.notify("✓ Updated staged commit description: " .. vim.trim(input))
         render()
       end
     end)
   end
 
-  -- Push parent commit (@-) to remote Git repository
-  local function push_parent()
-    if not is_parent_mutable() then
-      return vim.notify("Parent commit (@-) is already immutable (already pushed or root)", vim.log.levels.WARN)
+  -- Push staged commit (@-) to remote Git repository
+  local function push_staged()
+    if not M.has_staged_commit() then
+      return vim.notify("No staged commit to push", vim.log.levels.WARN)
     end
 
     local is_empty = run_jj({ "log", "-r", "@- & empty()", "-T", "change_id", "--no-graph" })
     if is_empty and is_empty[1] and vim.trim(is_empty[1]) ~= "" then
-      return vim.notify("Parent commit (@-) has no file changes to push", vim.log.levels.WARN)
+      return vim.notify("Staged commit has no file changes to push", vim.log.levels.WARN)
     end
 
-    if not confirm_yn("Push parent commit (@-) to remote?") then
+    if not confirm_yn("Push staged commit to remote?") then
       return
     end
 
-    vim.notify("Pushing to remote...", vim.log.levels.INFO)
-    local res = run_jj({ "git", "push" })
+    -- Advance closest tracking bookmark (defaulting to main) to @-
+    local bm_res = run_jj({ "log", "-r", "heads(::@- & bookmarks())", "-T", "bookmarks", "--no-graph" })
+    local bm_raw = (bm_res and bm_res[1] and vim.trim(bm_res[1]) ~= "") and vim.trim(bm_res[1]) or "main"
+    local bookmark_name = vim.split(bm_raw, "%s+")[1]
+    run_jj({ "bookmark", "set", bookmark_name, "-r", "@-" }, true)
+
+    vim.notify("Pushing staged commit to remote...", vim.log.levels.INFO)
+    local res = run_jj({ "git", "push" }, true)
     if res then
-      vim.notify("✓ Successfully pushed to remote!", vim.log.levels.INFO)
+      vim.notify("✓ Successfully pushed staged commit to remote!", vim.log.levels.INFO)
       M.refresh_all_diffs()
       render()
     end
@@ -359,8 +355,8 @@ local function open_jj_files_menu()
   vim.keymap.set("n", "a",     stage_entry,      { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "u",     unstage_entry,    { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "x",     discard_entry,    { buffer = buf, nowait = true, silent = true })
-  vim.keymap.set("n", "d",     describe_parent,  { buffer = buf, nowait = true, silent = true })
-  vim.keymap.set("n", "p",     push_parent,      { buffer = buf, nowait = true, silent = true })
+  vim.keymap.set("n", "d",     describe_staged,  { buffer = buf, nowait = true, silent = true })
+  vim.keymap.set("n", "p",     push_staged,      { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "q",     close_win,        { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "<Esc>", close_win,        { buffer = buf, nowait = true, silent = true })
 end
@@ -373,10 +369,10 @@ M.open_files_menu = open_jj_files_menu
 function M.setup()
   vim.api.nvim_create_user_command("JJFiles", function()
     M.open_files_menu()
-  end, { desc = "Open Jujutsu modified files menu (@ and @-)" })
+  end, { desc = "Open Jujutsu modified files menu (working copy & staged commit)" })
 
   vim.keymap.set("n", "<leader>jf", M.open_files_menu, { desc = "JJ Modified Files" })
-  vim.keymap.set("n", "<leader>jt", M.toggle_diff_base, { desc = "Toggle diff base (@- vs @--)" })
+  vim.keymap.set("n", "<leader>jt", M.toggle_diff_base, { desc = "Toggle diff mode (working vs staged)" })
 end
 
 return M
