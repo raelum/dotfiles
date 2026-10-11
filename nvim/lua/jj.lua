@@ -112,6 +112,9 @@ M.source = {
 -- Jujutsu Modified Files Menu (Browse, Stage & Unstage, Fig-style)
 -- =============================================================================
 
+-- Muted & italic highlight group for commit message in menu
+vim.api.nvim_set_hl(0, "JJCommitMsg", { link = "Comment", italic = true, default = true })
+
 -- Interactive dashboard to review working copy and stage into commit (@-)
 local function open_jj_files_menu()
   local win, buf = nil, nil
@@ -160,9 +163,13 @@ local function open_jj_files_menu()
     local first_file_line = nil
 
     -- Format a section header and file list with sign highlights
-    local function add_section(title, entries, empty_msg)
+    local function add_section(title, entries, empty_msg, subtitle)
       table.insert(buf_lines, " " .. title)
       table.insert(highlights, { #buf_lines - 1, 0, -1, "Title" })
+      if subtitle and subtitle ~= "" then
+        table.insert(buf_lines, '   "' .. subtitle .. '"')
+        table.insert(highlights, { #buf_lines - 1, 0, -1, "JJCommitMsg" })
+      end
       if #entries == 0 then
         table.insert(buf_lines, "   " .. empty_msg)
         table.insert(highlights, { #buf_lines - 1, 0, -1, "Comment" })
@@ -179,15 +186,14 @@ local function open_jj_files_menu()
       end
     end
 
-    add_section("Working Copy (@) - Uncommitted:", working_entries, "(no uncommitted changes)")
+    add_section("Working Copy", working_entries, "(clean)")
     table.insert(buf_lines, "")
 
     if has_staged then
       local desc = get_staged_desc()
-      local header = "Staged Commit (@-)" .. (desc and (' ["' .. desc .. '"]:') or ":")
-      add_section(header, staged_entries, "(no files in staged commit)")
+      add_section("Staged Commit", staged_entries, "(empty)", desc)
     else
-      add_section("Staged Commit: none", {}, "(stage uncommitted files with [a] to create)")
+      add_section("Staged Commit", {}, "(none)")
     end
 
     if not buf or not vim.api.nvim_buf_is_valid(buf) then
@@ -216,9 +222,9 @@ local function open_jj_files_menu()
       col = math.max(0, math.floor((vim.o.columns - width) / 2)),
       style = "minimal",
       border = "rounded",
-      title = " JJ Modified Files ",
+      title = " JJ Status ",
       title_pos = "center",
-      footer = " [a] Stage  [u] Unstage  [x] Discard  [d] Desc  [p] Push ",
+      footer = " [a] Stage  [u] Unstage  [x] Discard  [m] Msg   [p] Push ",
       footer_pos = "center",
     }
 
@@ -261,10 +267,10 @@ local function open_jj_files_menu()
         render(cur_row)
       end
     else
-      vim.ui.input({ prompt = "Initial commit message for staged commit: " }, function(input)
+      vim.ui.input({ prompt = "Commit message: " }, function(input)
         if not input or vim.trim(input) == "" then return end
         if run_jj({ "commit", "-m", vim.trim(input), entry.path }, true) then
-          vim.notify("✓ Created staged commit \"" .. vim.trim(input) .. "\"")
+          vim.notify("✓ Created commit \"" .. vim.trim(input) .. "\"")
           M.refresh_all_diffs()
           render(cur_row)
         end
@@ -282,7 +288,7 @@ local function open_jj_files_menu()
     end
 
     if run_jj({ "squash", "--from", "@-", "--into", "@", "--keep-emptied", entry.path }, true) then
-      vim.notify("✓ Unstaged '" .. entry.path .. "' back to Working Copy (@)")
+      vim.notify("✓ Unstaged '" .. entry.path .. "'")
       M.refresh_all_diffs()
       render(cur_row)
     end
@@ -309,9 +315,9 @@ local function open_jj_files_menu()
     if not M.has_staged_commit() then
       return vim.notify("No staged commit to describe", vim.log.levels.WARN)
     end
-    vim.ui.input({ prompt = "Edit description for staged commit: ", default = get_staged_desc() or "" }, function(input)
+    vim.ui.input({ prompt = "Edit commit message: ", default = get_staged_desc() or "" }, function(input)
       if input and vim.trim(input) ~= "" and run_jj({ "describe", "-r", "@-", "-m", vim.trim(input) }, true) then
-        vim.notify("✓ Updated staged commit description: " .. vim.trim(input))
+        vim.notify("✓ Updated commit message: " .. vim.trim(input))
         render()
       end
     end)
@@ -338,10 +344,10 @@ local function open_jj_files_menu()
     local bookmark_name = vim.split(bm_raw, "%s+")[1]
     run_jj({ "bookmark", "set", bookmark_name, "-r", "@-" }, true)
 
-    vim.notify("Pushing staged commit to remote...", vim.log.levels.INFO)
+    vim.notify("Pushing to remote...", vim.log.levels.INFO)
     local res = run_jj({ "git", "push" }, true)
     if res then
-      vim.notify("✓ Successfully pushed staged commit to remote!", vim.log.levels.INFO)
+      vim.notify("✓ Successfully pushed to remote!", vim.log.levels.INFO)
       M.refresh_all_diffs()
       render()
     end
@@ -355,7 +361,7 @@ local function open_jj_files_menu()
   vim.keymap.set("n", "a",     stage_entry,      { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "u",     unstage_entry,    { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "x",     discard_entry,    { buffer = buf, nowait = true, silent = true })
-  vim.keymap.set("n", "d",     describe_staged,  { buffer = buf, nowait = true, silent = true })
+  vim.keymap.set("n", "m",     describe_staged,  { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "p",     push_staged,      { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "q",     close_win,        { buffer = buf, nowait = true, silent = true })
   vim.keymap.set("n", "<Esc>", close_win,        { buffer = buf, nowait = true, silent = true })
