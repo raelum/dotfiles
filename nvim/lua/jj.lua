@@ -373,11 +373,11 @@ M.open_files_menu = open_jj_files_menu
 -- Setup & Keybindings
 -- =============================================================================
 function M.setup()
-  vim.api.nvim_create_user_command("JJFiles", function()
+  vim.api.nvim_create_user_command("JJStatus", function()
     M.open_files_menu()
-  end, { desc = "Open Jujutsu modified files menu (working copy & staged commit)" })
+  end, { desc = "Open Jujutsu status menu (working copy & staged commit)" })
 
-  vim.keymap.set("n", "<leader>jf", M.open_files_menu, { desc = "JJ Modified Files" })
+  vim.keymap.set("n", "<leader>jj", M.open_files_menu, { desc = "JJ Status" })
   vim.keymap.set("n", "<leader>jt", M.toggle_diff_base, { desc = "Toggle diff mode (working vs staged)" })
 end
 
