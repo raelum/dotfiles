@@ -46,6 +46,18 @@ if [ -f "$DOTFILES_DIR/termux/termux.properties" ]; then
     command -v termux-reload-settings >/dev/null 2>&1 && termux-reload-settings || true
 fi
 
+# 5. Agent Skills
+if [ -d "$DOTFILES_DIR/skills" ]; then
+    mkdir -p "$HOME/.gemini/config"
+    if [ -d "$HOME/.gemini/config/skills" ] && [ ! -L "$HOME/.gemini/config/skills" ]; then
+        BACKUP="$HOME/.gemini/config/skills.backup.$(date +%s)"
+        mv "$HOME/.gemini/config/skills" "$BACKUP"
+        echo "    Backed up existing ~/.gemini/config/skills to $BACKUP"
+    fi
+    ln -sfn "$DOTFILES_DIR/skills" "$HOME/.gemini/config/skills"
+    echo "    Linked ~/.gemini/config/skills -> $DOTFILES_DIR/skills"
+fi
+
 # ==============================================================================
 # Tmux Plugins
 # ==============================================================================
@@ -81,5 +93,13 @@ fi
 # ==============================================================================
 echo "==> Syncing Neovim plugins via lazy.nvim..."
 nvim --headless "+Lazy! sync" +qa
+
+# ==============================================================================
+# Agent Skills Dependencies
+# ==============================================================================
+if [ -f "$DOTFILES_DIR/skills/requirements.txt" ] && command -v pip >/dev/null 2>&1; then
+    echo "==> Installing Python dependencies for agent skills..."
+    pip install -q -r "$DOTFILES_DIR/skills/requirements.txt" || echo "    Warning: Some Python dependencies failed to install."
+fi
 
 echo "==> All dotfiles installed successfully!"
