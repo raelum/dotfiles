@@ -137,12 +137,34 @@ local function open_jj_files_menu()
     for _, line in ipairs(raw_lines or {}) do
       local status = line:sub(1, 1)
       local path_part = vim.trim(line:sub(3))
-      local file_path = status == "R" and (path_part:match("%->%s*(.+)$") or path_part) or path_part
+      local old_path, new_path = nil, path_part
+      -- Handle renames ('R'): compact 'prefix/{old => new}/suffix' or full 'old => new'
+      if status == "R" then
+        local prefix, old_sub, new_sub, suffix = path_part:match("^(.-)%{(.-)%s*=>%s*(.-)%}(.*)$")
+        if prefix then
+          old_path = prefix .. old_sub .. suffix
+          new_path = prefix .. new_sub .. suffix
+        else
+          local old_p, new_p = path_part:match("^(.-)%s*=>%s*(.-)$")
+          if old_p then
+            old_path = old_p
+            new_path = new_p
+          end
+        end
+      end
+
+      -- Renames require both old and new paths so JJ can stage/restore them atomically
+      local vcs_paths = { new_path }
+      if old_path and old_path ~= new_path then
+        vcs_paths = { old_path, new_path }
+      end
+
       table.insert(entries, {
         section = section,
         status = status,
-        path = file_path,
-        full_path = repo_root .. "/" .. file_path,
+        display_path = path_part,
+        edit_path = repo_root .. "/" .. new_path,
+        vcs_paths = vcs_paths,
       })
     end
     return entries
@@ -175,12 +197,13 @@ local function open_jj_files_menu()
         table.insert(highlights, { #buf_lines - 1, 0, -1, "Comment" })
       else
         for _, item in ipairs(entries) do
-          table.insert(buf_lines, string.format("   %s  %s", item.status, item.path))
+          table.insert(buf_lines, string.format("   %s  %s", item.status, item.display_path))
           line_to_entry[#buf_lines] = item
           if not first_file_line then first_file_line = #buf_lines end
           local hl = (item.status == "A" and "MiniDiffSignAdd")
             or (item.status == "M" and "MiniDiffSignChange")
-            or (item.status == "D" and "MiniDiffSignDelete") or "DiagnosticWarn"
+            or (item.status == "D" and "MiniDiffSignDelete")
+            or (item.status == "R" and "MiniDiffSignChange") or "DiagnosticWarn"
           table.insert(highlights, { #buf_lines - 1, 3, 4, hl })
         end
       end
@@ -249,9 +272,9 @@ local function open_jj_files_menu()
   local function open_entry()
     local cur_row = vim.api.nvim_win_get_cursor(win)[1]
     local entry = line_to_entry[cur_row]
-    if not entry or (entry.status == "D" and vim.fn.filereadable(entry.full_path) == 0) then return end
+    if not entry or (entry.status == "D" and vim.fn.filereadable(entry.edit_path) == 0) then return end
     close_win()
-    vim.cmd.edit(entry.full_path)
+    vim.cmd.edit(entry.edit_path)
   end
 
   -- Squash working copy file into staged commit (@-), prompting if initial commit
@@ -261,15 +284,19 @@ local function open_jj_files_menu()
     if not entry or entry.section == "staged" then return end
 
     if M.has_staged_commit() then
-      if run_jj({ "squash", entry.path }, true) then
-        vim.notify("✓ Staged '" .. entry.path .. "'")
+      local args = { "squash" }
+      vim.list_extend(args, entry.vcs_paths)
+      if run_jj(args, true) then
+        vim.notify("✓ Staged '" .. entry.display_path .. "'")
         M.refresh_all_diffs()
         render(cur_row)
       end
     else
       vim.ui.input({ prompt = "Commit message: " }, function(input)
         if not input or vim.trim(input) == "" then return end
-        if run_jj({ "commit", "-m", vim.trim(input), entry.path }, true) then
+        local args = { "commit", "-m", vim.trim(input) }
+        vim.list_extend(args, entry.vcs_paths)
+        if run_jj(args, true) then
           vim.notify("✓ Created commit \"" .. vim.trim(input) .. "\"")
           M.refresh_all_diffs()
           render(cur_row)
@@ -287,8 +314,10 @@ local function open_jj_files_menu()
       return vim.notify("No staged commit to unstage from", vim.log.levels.WARN)
     end
 
-    if run_jj({ "squash", "--from", "@-", "--into", "@", "--keep-emptied", entry.path }, true) then
-      vim.notify("✓ Unstaged '" .. entry.path .. "'")
+    local args = { "squash", "--from", "@-", "--into", "@", "--keep-emptied" }
+    vim.list_extend(args, entry.vcs_paths)
+    if run_jj(args, true) then
+      vim.notify("✓ Unstaged '" .. entry.display_path .. "'")
       M.refresh_all_diffs()
       render(cur_row)
     end
@@ -300,9 +329,11 @@ local function open_jj_files_menu()
     local entry = line_to_entry[cur_row]
     if not entry or entry.section ~= "working" then return end
 
-    if confirm_yn("Discard changes to '" .. entry.path .. "'?") then
-      if run_jj({ "restore", entry.path }, true) then
-        vim.notify("✓ Discarded " .. entry.path)
+    if confirm_yn("Discard changes to '" .. entry.display_path .. "'?") then
+      local args = { "restore" }
+      vim.list_extend(args, entry.vcs_paths)
+      if run_jj(args, true) then
+        vim.notify("✓ Discarded " .. entry.display_path)
         vim.cmd.checktime()
         M.refresh_all_diffs()
         render(cur_row)
