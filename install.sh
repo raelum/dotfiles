@@ -70,6 +70,18 @@ if [ -f "$DOTFILES_DIR/antigravity/settings.json" ]; then
     echo "    Linked ~/.gemini/antigravity-cli/settings.json -> $DOTFILES_DIR/antigravity/settings.json"
 fi
 
+# 7. Global Agent Directives
+if [ -f "$DOTFILES_DIR/antigravity/AGENTS.md" ]; then
+    mkdir -p "$HOME/.gemini/config"
+    if [ -f "$HOME/.gemini/config/AGENTS.md" ] && [ ! -L "$HOME/.gemini/config/AGENTS.md" ]; then
+        BACKUP="$HOME/.gemini/config/AGENTS.md.backup.$(date +%s)"
+        mv "$HOME/.gemini/config/AGENTS.md" "$BACKUP"
+        echo "    Backed up existing ~/.gemini/config/AGENTS.md to $BACKUP"
+    fi
+    ln -sf "$DOTFILES_DIR/antigravity/AGENTS.md" "$HOME/.gemini/config/AGENTS.md"
+    echo "    Linked ~/.gemini/config/AGENTS.md -> $DOTFILES_DIR/antigravity/AGENTS.md"
+fi
+
 # ==============================================================================
 # Tmux Plugins
 # ==============================================================================
