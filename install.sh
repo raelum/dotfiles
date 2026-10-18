@@ -46,16 +46,28 @@ if [ -f "$DOTFILES_DIR/termux/termux.properties" ]; then
     command -v termux-reload-settings >/dev/null 2>&1 && termux-reload-settings || true
 fi
 
-# 5. Agent Skills
-if [ -d "$DOTFILES_DIR/skills" ]; then
+# 5. Antigravity Skills
+if [ -d "$DOTFILES_DIR/antigravity/skills" ]; then
     mkdir -p "$HOME/.gemini/config"
     if [ -d "$HOME/.gemini/config/skills" ] && [ ! -L "$HOME/.gemini/config/skills" ]; then
         BACKUP="$HOME/.gemini/config/skills.backup.$(date +%s)"
         mv "$HOME/.gemini/config/skills" "$BACKUP"
         echo "    Backed up existing ~/.gemini/config/skills to $BACKUP"
     fi
-    ln -sfn "$DOTFILES_DIR/skills" "$HOME/.gemini/config/skills"
-    echo "    Linked ~/.gemini/config/skills -> $DOTFILES_DIR/skills"
+    ln -sfn "$DOTFILES_DIR/antigravity/skills" "$HOME/.gemini/config/skills"
+    echo "    Linked ~/.gemini/config/skills -> $DOTFILES_DIR/antigravity/skills"
+fi
+
+# 6. Antigravity CLI Configuration
+if [ -f "$DOTFILES_DIR/antigravity/settings.json" ]; then
+    mkdir -p "$HOME/.gemini/antigravity-cli"
+    if [ -f "$HOME/.gemini/antigravity-cli/settings.json" ] && [ ! -L "$HOME/.gemini/antigravity-cli/settings.json" ]; then
+        BACKUP="$HOME/.gemini/antigravity-cli/settings.json.backup.$(date +%s)"
+        mv "$HOME/.gemini/antigravity-cli/settings.json" "$BACKUP"
+        echo "    Backed up existing ~/.gemini/antigravity-cli/settings.json to $BACKUP"
+    fi
+    ln -sf "$DOTFILES_DIR/antigravity/settings.json" "$HOME/.gemini/antigravity-cli/settings.json"
+    echo "    Linked ~/.gemini/antigravity-cli/settings.json -> $DOTFILES_DIR/antigravity/settings.json"
 fi
 
 # ==============================================================================
@@ -97,9 +109,9 @@ nvim --headless "+Lazy! sync" +qa
 # ==============================================================================
 # Agent Skills Dependencies
 # ==============================================================================
-if [ -f "$DOTFILES_DIR/skills/requirements.txt" ] && command -v pip >/dev/null 2>&1; then
+if [ -f "$DOTFILES_DIR/antigravity/skills/requirements.txt" ] && command -v pip >/dev/null 2>&1; then
     echo "==> Installing Python dependencies for agent skills..."
-    pip install -q -r "$DOTFILES_DIR/skills/requirements.txt" || echo "    Warning: Some Python dependencies failed to install."
+    pip install -q -r "$DOTFILES_DIR/antigravity/skills/requirements.txt" || echo "    Warning: Some Python dependencies failed to install."
 fi
 
 echo "==> All dotfiles installed successfully!"

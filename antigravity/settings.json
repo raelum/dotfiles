@@ -1,0 +1,29 @@
+{
+  "colorScheme": "tokyo night",
+  "model": "Gemini 3.8 Flash (High)",
+  "permissions": {
+    "deny": [
+      "command(git*)"
+    ],
+    "allow": [
+      "read_file(*)",
+      "command(ls*)",
+      "command(cat *)",
+      "command(head *)",
+      "command(tail *)",
+      "command(grep *)",
+      "command(rg *)",
+      "command(find *)",
+      "command(which *)",
+      "command(jj status*)",
+      "command(jj diff*)",
+      "command(jj log*)",
+      "command(jj show*)",
+      "command(jj file show*)"
+    ]
+  },
+  "toolPermission": "default",
+  "trustedWorkspaces": [
+    "/data/data/com.termux/files/home"
+  ]
+}
