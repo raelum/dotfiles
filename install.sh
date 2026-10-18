@@ -10,77 +10,42 @@ TPM_DIR="$HOME/.tmux/plugins/tpm"
 
 echo "==> Setting up symlinks from $DOTFILES_DIR to $HOME..."
 
+# Helper: link source to destination with directory creation and backup
+link_config() {
+    local src="$1"
+    local dst="$2"
+
+    [ ! -e "$src" ] && return 0
+
+    mkdir -p "$(dirname "$dst")"
+
+    if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+        local backup="${dst}.backup.$(date +%s)"
+        mv "$dst" "$backup"
+        echo "    Backed up existing $dst to $backup"
+    fi
+
+    ln -sfn "$src" "$dst"
+    echo "    Linked $dst -> $src"
+}
+
 # 1. Tmux
-ln -sf "$DOTFILES_DIR/tmux/tmux.conf" "$HOME/.tmux.conf"
-echo "    Linked ~/.tmux.conf"
+link_config "$DOTFILES_DIR/tmux/tmux.conf" "$HOME/.tmux.conf"
 
 # 2. Neovim
-mkdir -p "$HOME/.config"
-if [ -d "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then
-    # Back up if there are any non-symlink files, otherwise remove old directory
-    non_symlinks=$(find "$HOME/.config/nvim" -maxdepth 1 -type f ! -type l 2>/dev/null || true)
-    if [ -n "$non_symlinks" ]; then
-        BACKUP="$HOME/.config/nvim.backup.$(date +%s)"
-        mv "$HOME/.config/nvim" "$BACKUP"
-        echo "    Backed up existing ~/.config/nvim to $BACKUP"
-    else
-        rm -rf "$HOME/.config/nvim"
-    fi
-fi
-ln -sfn "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
-echo "    Linked ~/.config/nvim -> $DOTFILES_DIR/nvim"
+link_config "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
 
 # 3. Bashrc
-if [ -f "$HOME/.bashrc" ] && [ ! -L "$HOME/.bashrc" ]; then
-    cp "$HOME/.bashrc" "$HOME/.bashrc.backup.$(date +%s)"
-    echo "    Backed up existing ~/.bashrc"
-fi
-ln -sf "$DOTFILES_DIR/bash/.bashrc" "$HOME/.bashrc"
-echo "    Linked ~/.bashrc"
+link_config "$DOTFILES_DIR/bash/.bashrc" "$HOME/.bashrc"
 
 # 4. Termux Properties
-if [ -f "$DOTFILES_DIR/termux/termux.properties" ]; then
-    mkdir -p "$HOME/.termux"
-    ln -sf "$DOTFILES_DIR/termux/termux.properties" "$HOME/.termux/termux.properties"
-    echo "    Linked ~/.termux/termux.properties"
-    command -v termux-reload-settings >/dev/null 2>&1 && termux-reload-settings || true
-fi
+link_config "$DOTFILES_DIR/termux/termux.properties" "$HOME/.termux/termux.properties"
+command -v termux-reload-settings >/dev/null 2>&1 && termux-reload-settings || true
 
-# 5. Antigravity Skills
-if [ -d "$DOTFILES_DIR/antigravity/skills" ]; then
-    mkdir -p "$HOME/.gemini/config"
-    if [ -d "$HOME/.gemini/config/skills" ] && [ ! -L "$HOME/.gemini/config/skills" ]; then
-        BACKUP="$HOME/.gemini/config/skills.backup.$(date +%s)"
-        mv "$HOME/.gemini/config/skills" "$BACKUP"
-        echo "    Backed up existing ~/.gemini/config/skills to $BACKUP"
-    fi
-    ln -sfn "$DOTFILES_DIR/antigravity/skills" "$HOME/.gemini/config/skills"
-    echo "    Linked ~/.gemini/config/skills -> $DOTFILES_DIR/antigravity/skills"
-fi
-
-# 6. Antigravity CLI Configuration
-if [ -f "$DOTFILES_DIR/antigravity/settings.json" ]; then
-    mkdir -p "$HOME/.gemini/antigravity-cli"
-    if [ -f "$HOME/.gemini/antigravity-cli/settings.json" ] && [ ! -L "$HOME/.gemini/antigravity-cli/settings.json" ]; then
-        BACKUP="$HOME/.gemini/antigravity-cli/settings.json.backup.$(date +%s)"
-        mv "$HOME/.gemini/antigravity-cli/settings.json" "$BACKUP"
-        echo "    Backed up existing ~/.gemini/antigravity-cli/settings.json to $BACKUP"
-    fi
-    ln -sf "$DOTFILES_DIR/antigravity/settings.json" "$HOME/.gemini/antigravity-cli/settings.json"
-    echo "    Linked ~/.gemini/antigravity-cli/settings.json -> $DOTFILES_DIR/antigravity/settings.json"
-fi
-
-# 7. Global Agent Directives
-if [ -f "$DOTFILES_DIR/antigravity/AGENTS.md" ]; then
-    mkdir -p "$HOME/.gemini/config"
-    if [ -f "$HOME/.gemini/config/AGENTS.md" ] && [ ! -L "$HOME/.gemini/config/AGENTS.md" ]; then
-        BACKUP="$HOME/.gemini/config/AGENTS.md.backup.$(date +%s)"
-        mv "$HOME/.gemini/config/AGENTS.md" "$BACKUP"
-        echo "    Backed up existing ~/.gemini/config/AGENTS.md to $BACKUP"
-    fi
-    ln -sf "$DOTFILES_DIR/antigravity/AGENTS.md" "$HOME/.gemini/config/AGENTS.md"
-    echo "    Linked ~/.gemini/config/AGENTS.md -> $DOTFILES_DIR/antigravity/AGENTS.md"
-fi
+# 5. Antigravity Configuration & Skills
+link_config "$DOTFILES_DIR/antigravity/skills" "$HOME/.gemini/config/skills"
+link_config "$DOTFILES_DIR/antigravity/settings.json" "$HOME/.gemini/antigravity-cli/settings.json"
+link_config "$DOTFILES_DIR/antigravity/AGENTS.md" "$HOME/.gemini/config/AGENTS.md"
 
 # ==============================================================================
 # Tmux Plugins
