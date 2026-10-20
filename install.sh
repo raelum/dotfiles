@@ -31,6 +31,7 @@ link_config() {
 
 # 1. Tmux
 link_config "$DOTFILES_DIR/tmux/tmux.conf" "$HOME/.tmux.conf"
+link_config "$DOTFILES_DIR/tmux/scripts" "$HOME/.tmux/scripts"
 
 # 2. Neovim
 link_config "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
