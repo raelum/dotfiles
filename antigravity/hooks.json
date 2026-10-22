@@ -1,0 +1,14 @@
+{
+  "command-validator": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "command": "python3 ~/.gemini/config/scripts/command-validator.py"
+          }
+        ]
+      }
+    ]
+  }
+}

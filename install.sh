@@ -45,8 +45,8 @@ command -v termux-reload-settings >/dev/null 2>&1 && termux-reload-settings || t
 
 # 5. Antigravity Configuration & Skills
 link_config "$DOTFILES_DIR/antigravity/skills" "$HOME/.gemini/config/skills"
-link_config "$DOTFILES_DIR/antigravity/settings.json" "$HOME/.gemini/antigravity-cli/settings.json"
-link_config "$DOTFILES_DIR/antigravity/AGENTS.md" "$HOME/.gemini/config/AGENTS.md"
+link_config "$DOTFILES_DIR/antigravity/hooks.json" "$HOME/.gemini/config/hooks.json"
+link_config "$DOTFILES_DIR/antigravity/scripts" "$HOME/.gemini/config/scripts"
 
 # ==============================================================================
 # Tmux Plugins
