@@ -119,6 +119,11 @@ vim.api.nvim_set_hl(0, "JJCommitMsg", { link = "Comment", italic = true, default
 local function open_jj_files_menu()
   local win, buf = nil, nil
 
+  -- Capture active buffer's normalized file path to auto-focus on initial open
+  local initial_buf = vim.api.nvim_get_current_buf()
+  local initial_path = vim.api.nvim_buf_get_name(initial_buf)
+  local active_file = (initial_path and initial_path ~= "") and vim.fs.normalize(initial_path) or nil
+
   -- Ensure current buffer is within a Jujutsu repository
   local repo_root = vim.fs.root(0, ".jj") or vim.fs.root(vim.fn.getcwd(), ".jj")
   if not repo_root then return vim.notify("Not inside a Jujutsu repository", vim.log.levels.WARN) end
@@ -257,9 +262,22 @@ local function open_jj_files_menu()
       vim.api.nvim_win_set_config(win, win_opts)
     end
 
-    -- TODO: Match active buffer path against entries so menu opens directly on current file
+    -- Set cursor to target row (or first file entry if none specified)
     local cursor_row = math.max(1, math.min(target_row or first_file_line or 2, #buf_lines))
     pcall(vim.api.nvim_win_set_cursor, win, { cursor_row, 5 })
+  end
+
+  -- Find line number for a given absolute file path (scans top-to-bottom: working copy first)
+  local function find_file_row(file_path)
+    if not file_path or file_path == "" or not buf then return nil end
+    local norm = vim.fs.normalize(file_path)
+    for line_num = 1, vim.api.nvim_buf_line_count(buf) do
+      local item = line_to_entry[line_num]
+      if item and item.edit_path and vim.fs.normalize(item.edit_path) == norm then
+        return line_num
+      end
+    end
+    return nil
   end
 
   -- Safely close the floating menu window
@@ -344,8 +362,6 @@ local function open_jj_files_menu()
     if not M.has_staged_commit() then
       return vim.notify("No staged commit to describe", vim.log.levels.WARN)
     end
-    -- TODO: Get the line of the file in the currently open buffer instead, so opening
-    -- or refreshing the JJ menu automatically focuses the active buffer's file entry.
     local cur_row = (win and vim.api.nvim_win_is_valid(win)) and vim.api.nvim_win_get_cursor(win)[1] or nil
     vim.ui.input({ prompt = "Edit commit message: ", default = get_staged_desc() or "" }, function(input)
       vim.cmd("redraw") -- Clear input prompt from cmdline to prevent "Press ENTER" prompt
@@ -387,6 +403,14 @@ local function open_jj_files_menu()
 
   render()
   if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
+
+  -- On initial menu open, focus the active buffer's file if it has changes
+  if active_file then
+    local initial_row = find_file_row(active_file)
+    if initial_row then
+      pcall(vim.api.nvim_win_set_cursor, win, { initial_row, 5 })
+    end
+  end
 
   -- Keybindings for the menu
   vim.keymap.set("n", "<CR>",  open_entry,       { buffer = buf, nowait = true, silent = true })
