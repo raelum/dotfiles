@@ -1,8 +1,8 @@
 #!/bin/sh
 
 MODE=$(tmux show-option -gv window-size 2>/dev/null)
-CLIENT_W=$(tmux display-message -p '#{client_width}' 2>/dev/null || echo "100")
-CLIENT_H=$(tmux display-message -p '#{client_height}' 2>/dev/null || echo "18")
+CLIENT_W=$(tmux display-message -p '#{client_width}')
+CLIENT_H=$(tmux display-message -p '#{client_height}')
 
 if [ "$MODE" = "manual" ]; then
     # Restore auto-sizing and snap existing windows back to full client width
