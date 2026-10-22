@@ -257,6 +257,7 @@ local function open_jj_files_menu()
       vim.api.nvim_win_set_config(win, win_opts)
     end
 
+    -- TODO: Match active buffer path against entries so menu opens directly on current file
     local cursor_row = math.max(1, math.min(target_row or first_file_line or 2, #buf_lines))
     pcall(vim.api.nvim_win_set_cursor, win, { cursor_row, 5 })
   end
@@ -287,17 +288,16 @@ local function open_jj_files_menu()
       local args = { "squash" }
       vim.list_extend(args, entry.vcs_paths)
       if run_jj(args, true) then
-        vim.notify("✓ Staged '" .. entry.display_path .. "'")
         M.refresh_all_diffs()
         render(cur_row)
       end
     else
       vim.ui.input({ prompt = "Commit message: " }, function(input)
+        vim.cmd("redraw") -- Clear input prompt from cmdline to prevent "Press ENTER" prompt
         if not input or vim.trim(input) == "" then return end
         local args = { "commit", "-m", vim.trim(input) }
         vim.list_extend(args, entry.vcs_paths)
         if run_jj(args, true) then
-          vim.notify("✓ Created commit \"" .. vim.trim(input) .. "\"")
           M.refresh_all_diffs()
           render(cur_row)
         end
@@ -317,7 +317,6 @@ local function open_jj_files_menu()
     local args = { "squash", "--from", "@-", "--into", "@", "--keep-emptied" }
     vim.list_extend(args, entry.vcs_paths)
     if run_jj(args, true) then
-      vim.notify("✓ Unstaged '" .. entry.display_path .. "'")
       M.refresh_all_diffs()
       render(cur_row)
     end
@@ -333,7 +332,6 @@ local function open_jj_files_menu()
       local args = { "restore" }
       vim.list_extend(args, entry.vcs_paths)
       if run_jj(args, true) then
-        vim.notify("✓ Discarded " .. entry.display_path)
         vim.cmd.checktime()
         M.refresh_all_diffs()
         render(cur_row)
@@ -346,10 +344,13 @@ local function open_jj_files_menu()
     if not M.has_staged_commit() then
       return vim.notify("No staged commit to describe", vim.log.levels.WARN)
     end
+    -- TODO: Get the line of the file in the currently open buffer instead, so opening
+    -- or refreshing the JJ menu automatically focuses the active buffer's file entry.
+    local cur_row = (win and vim.api.nvim_win_is_valid(win)) and vim.api.nvim_win_get_cursor(win)[1] or nil
     vim.ui.input({ prompt = "Edit commit message: ", default = get_staged_desc() or "" }, function(input)
+      vim.cmd("redraw") -- Clear input prompt from cmdline to prevent "Press ENTER" prompt
       if input and vim.trim(input) ~= "" and run_jj({ "describe", "-r", "@-", "-m", vim.trim(input) }, true) then
-        vim.notify("✓ Updated commit message: " .. vim.trim(input))
-        render()
+        render(cur_row)
       end
     end)
   end
