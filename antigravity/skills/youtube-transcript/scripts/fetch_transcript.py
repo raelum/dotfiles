@@ -15,7 +15,10 @@ if not match:
 
 try:
     transcripts = YouTubeTranscriptApi().list(match.group(1))
-    transcript = next(iter(transcripts))
+    try:
+        transcript = transcripts.find_transcript(["en", "en-US", "en-GB"])
+    except Exception:
+        transcript = next(iter(transcripts))
     print(" ".join(s.text for s in transcript.fetch()))
 except StopIteration:
     sys.exit("Error: No transcripts available for this video.")
