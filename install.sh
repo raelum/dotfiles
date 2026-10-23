@@ -82,8 +82,8 @@ fi
 # ==============================================================================
 # Neovim Plugins
 # ==============================================================================
-echo "==> Syncing Neovim plugins via lazy.nvim..."
-nvim --headless "+Lazy! sync" +qa
+echo "==> Installing Neovim plugins via lazy.nvim..."
+nvim --headless "+Lazy! restore" +qa
 
 # ==============================================================================
 # Agent Skills Dependencies
