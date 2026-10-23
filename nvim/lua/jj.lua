@@ -428,7 +428,70 @@ M.open_files_menu = open_jj_files_menu
 -- =============================================================================
 -- Setup & Keybindings
 -- =============================================================================
+
+-- Soft-wrap Virtual Lines in Diff Overlay (neovim#18282)
+local function wrap_virt_line(line, max_w)
+  local wrapped, current, width = {}, {}, 0
+
+  for chunk_idx, chunk in ipairs(line) do
+    local text, hl = chunk[1], chunk[2]
+    -- Skip mini.diff's trailing full-width padding chunk
+    if chunk_idx == #line and text:match("^ +$") then
+      break
+    end
+
+    -- Create virtual lines one chunk at a time, wrapping if necessary
+    while #text > 0 do
+      if width >= max_w then
+        table.insert(wrapped, current)
+        current = { { "↳ ", "NonText" } }
+        width = 2
+      end
+
+      local avail = max_w - width
+      local part = text:sub(1, avail)
+      table.insert(current, { part, hl })
+      width = width + #part
+      text = text:sub(avail + 1)
+    end
+  end
+
+  if #current > 0 then table.insert(wrapped, current) end
+  return #wrapped > 0 and wrapped or { line }
+end
+
+-- Intercept mini.diff overlay extmarks to soft-wrap virtual lines to window width
+function M.setup_diff_wrap()
+  if _G._minidiff_virt_lines_wrapped then return end -- Avoid re-wrapping on config reload
+  local overlay_ns = vim.api.nvim_create_namespace("MiniDiffOverlay")
+  local orig_set_extmark = vim.api.nvim_buf_set_extmark
+
+  vim.api.nvim_buf_set_extmark = function(buf, ns, row, col, opts)
+    -- Only intercept virtual lines placed by mini.diff
+    if ns == overlay_ns and opts and opts.virt_lines and #opts.virt_lines > 0 then
+      -- Calculate usable text width (window width minus gutter)
+      local win = vim.fn.bufwinid(buf)
+      if win == -1 then win = vim.api.nvim_get_current_win() end
+      local win_info = vim.fn.getwininfo(win)
+      local textoff = (win_info and win_info[1]) and win_info[1].textoff or 4
+      local max_w = math.max(20, vim.api.nvim_win_get_width(win) - textoff)
+
+      local new_virt_lines = {}
+      for _, line in ipairs(opts.virt_lines) do
+        for _, wline in ipairs(wrap_virt_line(line, max_w)) do
+          table.insert(new_virt_lines, wline)
+        end
+      end
+      opts.virt_lines = new_virt_lines
+    end
+    return orig_set_extmark(buf, ns, row, col, opts)
+  end
+
+  _G._minidiff_virt_lines_wrapped = true
+end
+
 function M.setup()
+  M.setup_diff_wrap()
   vim.api.nvim_create_user_command("JJStatus", function()
     M.open_files_menu()
   end, { desc = "Open Jujutsu status menu (working copy & staged commit)" })

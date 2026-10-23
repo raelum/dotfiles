@@ -153,12 +153,6 @@ if has_minidiff then
   vim.api.nvim_set_hl(0, "MiniDiffOverAdd",        { bg = "#1b382b" })                                             -- Fully added new lines
 
   -- Toggle inline diff overlay (VS Code-style with word-level highlights)
-  -- TODO: Wrap virtual lines for old reference lines in diff overlay.
-  -- Neovim's extmark virt_lines do not natively respect vim.opt.wrap (neovim/neovim#18282),
-  -- causing deleted/changed reference lines to overflow horizontally without wrapping.
-  -- Fix strategy: Intercept or wrap minidiff.toggle_overlay(0) to measure available window
-  -- width (vim.api.nvim_win_get_width(0)) and chunk long reference lines into multiple
-  -- virt_lines array items so Neovim renders them on stacked visual rows (simulating soft-wrap).
   local function toggle_inline_diff()
     minidiff.toggle_overlay(0)
   end
