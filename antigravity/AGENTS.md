@@ -1,0 +1,2 @@
+- Speak highly concisely
+- Use nested bullet lists instead of markdown tables

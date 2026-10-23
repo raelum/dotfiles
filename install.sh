@@ -44,6 +44,7 @@ link_config "$DOTFILES_DIR/termux/termux.properties" "$HOME/.termux/termux.prope
 command -v termux-reload-settings >/dev/null 2>&1 && termux-reload-settings || true
 
 # 5. Antigravity Configuration & Skills
+link_config "$DOTFILES_DIR/antigravity/AGENTS.md" "$HOME/.gemini/config/AGENTS.md"
 link_config "$DOTFILES_DIR/antigravity/skills" "$HOME/.gemini/config/skills"
 link_config "$DOTFILES_DIR/antigravity/hooks.json" "$HOME/.gemini/config/hooks.json"
 link_config "$DOTFILES_DIR/antigravity/scripts" "$HOME/.gemini/config/scripts"
