@@ -170,6 +170,34 @@ end
 vim.keymap.set("n", "<leader>w", "<cmd>write<CR>", { desc = "Save current file" })
 
 -- =============================================================================
+-- Quick Escape (jk with timeout)
+-- =============================================================================
+local last_j_time = 0
+local quick_escape_timeout_ms = 300
+
+-- Record timestamp on 'j' and insert it immediately without input lag
+vim.keymap.set("i", "j", function()
+  last_j_time = (vim.uv or vim.loop).now()
+  return "j"
+end, { expr = true, desc = "Track j timestamp for jk escape" })
+
+-- Check if 'k' immediately follows 'j' within the timeout threshold
+vim.keymap.set("i", "k", function()
+  local now = (vim.uv or vim.loop).now()
+  local col = vim.fn.col(".")
+  local prev_char = col > 1 and vim.fn.getline("."):sub(col - 1, col - 1) or ""
+
+  local is_recent = (now - last_j_time) <= quick_escape_timeout_ms
+  local preceded_by_j = prev_char == "j"
+  if is_recent and preceded_by_j then
+    last_j_time = 0
+    return "<BS><Esc>" -- Delete 'j' and exit to Normal mode
+  end
+
+  return "k"
+end, { expr = true, desc = "Escape to Normal mode on fast jk" })
+
+-- =============================================================================
 -- Generic Configuration Reload Shortcut (<leader>r)
 -- =============================================================================
 local function reload_config()
