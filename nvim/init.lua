@@ -165,9 +165,11 @@ if has_minidiff then
 end
 
 -- =============================================================================
--- Quick Save Shortcut (<leader>w)
+-- Quick Save & Quit Shortcuts (<leader>w, <leader>q, <leader>Q)
 -- =============================================================================
 vim.keymap.set("n", "<leader>w", "<cmd>write<CR>", { desc = "Save current file" })
+vim.keymap.set("n", "<leader>q", "<cmd>x<CR>", { desc = "Save and quit current buffer" })
+vim.keymap.set("n", "<leader>Q", "<cmd>q!<CR>", { desc = "Quit without saving" })
 
 -- =============================================================================
 -- Quick Escape (jk with timeout)
