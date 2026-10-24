@@ -2,7 +2,7 @@
   "command-validator": {
     "PreToolUse": [
       {
-        "matcher": "run_command",
+        "matcher": "run_command|edit_file|write_file",
         "hooks": [
           {
             "command": "python3 ~/.gemini/config/scripts/command-validator.py"

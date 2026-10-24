@@ -2,8 +2,21 @@
 """PreToolUse hook that validates shell commands before execution and returns an allow or deny decision."""
 
 import json
+import os
 import re
 import sys
+
+def check_file_tool(tool_name: str, args: dict) -> dict:
+    path = args.get("Path", "")
+    if os.path.basename(path.rstrip("/")) == "todo.md":
+        return {
+            "decision": "deny",
+            "reason": (
+                f"Tool \"{tool_name}\" targeting \"{path}\" is prohibited. "
+                "todo.md is strictly read-only for agents and managed exclusively by the user."
+            )
+        }
+    return {"decision": "allow"}
 
 def check_command(cmd: str) -> dict:
     if not cmd:
@@ -64,17 +77,23 @@ def main():
             }))
             return
 
-        # Pass through non-shell tools without inspection
-        payload = json.loads(raw_input)
-        tool_call = payload.get("toolCall", {})
-        if tool_call.get("name") != "run_command":
-            print(json.dumps({"decision": "allow"}))
+        # Validate tool call against our policies
+        tool_call = json.loads(raw_input).get("toolCall", {})
+        tool_name = tool_call.get("name", "")
+        args = tool_call.get("args", {})
+
+        if tool_name == "run_command":
+            cmd = args.get("CommandLine", "")
+            result = check_command(cmd)
+            print(json.dumps(result))
             return
 
-        # Validate shell command against security and VCS rules
-        cmd = tool_call.get("args", {}).get("CommandLine", "")
-        result = check_command(cmd)
-        print(json.dumps(result))
+        if tool_name in ("edit_file", "write_file"):
+            result = check_file_tool(tool_name, args)
+            print(json.dumps(result))
+            return
+
+        print(json.dumps({"decision": "allow"}))
 
     except Exception as exc:
         # Convert exceptions into a structured denial
